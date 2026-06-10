@@ -1,4 +1,4 @@
-require("dotenv").config();
+require('dotenv').config();
 const axios = require("axios");
 
 const { App } = require("@slack/bolt");
@@ -77,18 +77,20 @@ app.command("/skl-wave", async({ command, ack, respond }) => {
 
 app.command("/skl-help", async ({ ack, respond }) => {
   await ack();
+  
   const helpMessage = `
-  Here are the commands you can use:\n +
-  - /skl-ping: Check the bot's latency.\n +
-  - /skl-help: Display this help message.\n +
-  - /skl-catfact: Get a random cat fact.\n +
-  - /skl-joke: Get a random fact.\n +
-  - /skl-quote: Get a random quote!\n +
-  - /skl-time: Fetch the current time\n +
-  - /skl-date: Fetch today's date\n +
-  - /skl-echo [text]: Echo back the provided text\n +
-  - /skl-achoo: Make the bot sneeze\n + 
-  - /skl-wave: Bot waves at you`
+  *SlackyssaLiu Commands:*
+
+  • /skl-ping — Check bot latency  
+  • /skl-help — Show this message  
+  • /skl-catfact — Get a random cat fact  
+  • /skl-joke — Get a random joke  
+  • /skl-quote — Get a random quote  
+  • /skl-time — Get current time  
+  • /skl-date — Get today’s date  
+  • /skl-echo [text] — Echo your message  
+  • /skl-achoo — Make the bot sneeze 🤧  
+  • /skl-wave — Bot waves 👋`;
 
   await respond({ text: helpMessage });
 });
