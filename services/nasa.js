@@ -1,5 +1,4 @@
-// services/nasa.js
-// Wraps NASA's open API (https://api.nasa.gov). Free key, generous rate limit
+// Wraps NASA's open API (https://api.nasa.gov)
 
 const axios = require("axios");
 
