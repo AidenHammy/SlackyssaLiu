@@ -19,6 +19,10 @@ _Mission records_
 - /skl-logs -> show recent entries
 - /skl-callsign [name] -> set your callsign
 
+_Scheduling_
+- /skl-setup -> bind daily scheduled posts to this channel
+- /skl-unset -> stop scheduled posts in this channel
+
 _Utility_
 - /skl-ping -> check the link
 - /skl-help -> this message`;
