@@ -71,6 +71,16 @@ function registerCommands(app) {
       const { title, date, url } = await nasa.getApod();
       await respond({ 
         text: `*${title}* (${date})\n<${url}>\n${p.apodFlavor()}`,
+        // Forcing blocks is the only way to 100% guarantee unfurling on slash commands
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*${title}* (${date})\n<${url}>\n${p.apodFlavor()}`
+            }
+          }
+        ],
         unfurl_links: true,
         unfurl_media: true
       });
