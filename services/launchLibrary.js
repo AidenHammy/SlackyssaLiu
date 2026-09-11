@@ -1,20 +1,25 @@
-// Wraps The Space Devs' Launch Library 2 (https://thespacedevs.com/llapi)
-
 const axios = require('axios');
 
 const BASE = 'https://ll.thespacedevs.com/2.2.0';
 
+const headers = {
+  // LL2 requires a user-agent or authorization string, even for basic limits
+  Authorization: "Discord",
+};
+
 async function getNextLaunch() {
-  const res = await axios.get(`${BASE}/launch/upcoming/`, {
+  const { data } = await axios.get(`${BASE}/launch/upcoming/`, {
     params: { limit: 1 },
+    headers
   });
-  const launch = res.data.results[0];
+  
+  const launch = data.results[0];
   if (!launch) return null;
 
   return {
     id: launch.id,
     name: launch.name,
-    net: launch.net, // ISO timestamp of "no earlier than" launch time
+    net: launch.net,
     provider: launch.launch_service_provider?.name,
     pad: launch.pad?.name,
     location: launch.pad?.location?.name,
@@ -23,8 +28,8 @@ async function getNextLaunch() {
 }
 
 async function getUpcomingLaunches(limit = 5) {
-  const res = await axios.get(`${BASE}/launch/upcoming/`, { params: { limit } });
-  return res.data.results.map((l) => ({
+  const { data } = await axios.get(`${BASE}/launch/upcoming/`, { params: { limit }, headers });
+  return data.results.map(l => ({
     id: l.id,
     name: l.name,
     net: l.net,

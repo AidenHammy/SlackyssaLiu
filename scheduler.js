@@ -1,49 +1,55 @@
-// Proactive behavior, the part a slash-command-only bot can't do.
-// Requires SLACK_ANNOUNCE_CHANNEL (a channel ID the bot is a member of).
-
-const cron = require('node-cron');
-const nasa = require('./services/nasa');
-const launchLibrary = require('./services/launchLibrary');
-const db = require('./db');
-const p = require('./personality');
+const cron = require('node-cron'),
+      nasa = require('./services/nasa'),
+      launchLibrary = require('./services/launchLibrary'),
+      db = require('./db'),
+      p = require('./personality');
 
 function registerScheduler(app) {
-  const channel = process.env.SLACK_ANNOUNCE_CHANNEL;
-  if (!channel) {
-    console.warn('SLACK_ANNOUNCE_CHANNEL not set, scheduled posts disabled.');
-    return;
-  }
-
-  // Daily APOD, 9am server time.
+  // 9am daily APOD
   cron.schedule('0 9 * * *', async () => {
+    const channels = db.getAnnounceChannels();
+    if (!channels.length) return;
+
     try {
-      const apod = await nasa.getApod();
-      await app.client.chat.postMessage({
-        channel,
-        text: `🌌 *${apod.title}*\n${apod.url}\n${p.apodFlavor()}`,
-      });
-    } catch (err) {
-      console.error('APOD cron failed:', err.message);
+      const { title, url } = await nasa.getApod();
+      const text = `🌌 *${title}*\n${url}\n${p.apodFlavor()}`;
+      
+      for (const { channel_id } of channels) {
+        await app.client.chat.postMessage({
+          channel: channel_id,
+          text,
+          unfurl_links: true,
+          unfurl_media: true
+        });
+      }
+    } catch (e) {
+      console.error('APOD cron failed');
     }
   });
 
-  // Every 10 minutes: check if a launch is within the next hour and not
-  // yet announced. This is the "actually behaves like a product" feature.
+  // Check for upcoming launches every 10 mins
   cron.schedule('*/10 * * * *', async () => {
+    const channels = db.getAnnounceChannels();
+    if (!channels.length) return;
+
     try {
       const launch = await launchLibrary.getNextLaunch();
       if (!launch || db.hasAnnouncedLaunch(launch.id)) return;
 
-      const minutesOut = (new Date(launch.net).getTime() - Date.now()) / 60000;
-      if (minutesOut > 0 && minutesOut <= 60) {
-        await app.client.chat.postMessage({
-          channel,
-          text: `🚀 T-minus ~${Math.round(minutesOut)} min: *${launch.name}* is about to go up.\n${p.launchFlavor()}`,
-        });
+      const diff = (new Date(launch.net).getTime() - Date.now()) / 60000;
+      if (diff > 0 && diff <= 60) {
+        const text = `🚀 T-minus ~${Math.round(diff)} min: *${launch.name}* is about to go up.\n${p.launchFlavor()}`;
+        
+        for (const { channel_id } of channels) {
+          await app.client.chat.postMessage({
+            channel: channel_id,
+            text
+          });
+        }
         db.markLaunchAnnounced(launch.id);
       }
-    } catch (err) {
-      console.error('Launch cron failed:', err.message);
+    } catch (e) {
+      console.error('Launch check failed');
     }
   });
 }

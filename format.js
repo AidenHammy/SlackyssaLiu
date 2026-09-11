@@ -1,24 +1,22 @@
 function countdown(targetIso) {
-  const diffMs = new Date(targetIso).getTime() - Date.now();
-  if (diffMs <= 0) return "any moment now";
+  const diff = new Date(targetIso).getTime() - Date.now();
+  if (diff <= 0) return "any moment now";
 
-  const totalMinutes = Math.floor(diffMs / 60000);
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
+  const totalMins = Math.floor(diff / 60000);
+  const days = Math.floor(totalMins / 1440),
+        hours = Math.floor((totalMins % 1440) / 60),
+        mins = totalMins % 60;
 
-  const parts = [];
-  if (days) parts.push(`${days}d`);
-  if (hours) parts.push(`${hours}h`);
-  parts.push(`${minutes}m`);
-  return parts.join(" ");
+  return [days ? `${days}d` : null, hours ? `${hours}h` : null, `${mins}m`]
+    .filter(Boolean)
+    .join(" ");
 }
 
 async function safeRespond(respond, fn, errorLine) {
   try {
     await fn();
-  } catch (err) {
-    console.error(err);
+  } catch {
+    console.error("Respond failed");
     await respond({ text: errorLine });
   }
 }

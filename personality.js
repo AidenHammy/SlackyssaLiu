@@ -1,6 +1,5 @@
-
-function pick(list) {
-  return list[Math.floor(Math.random() * list.length)];
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 const bootLines = [
@@ -92,12 +91,12 @@ const logAckLines = [
 ];
 
 module.exports = {
-  bootLine: () => pick(bootLines),
-  pingLine: () => pick(pingLines),
-  issFlavor: () => pick(issFlavor),
-  launchFlavor: () => pick(launchFlavor),
-  apodFlavor: () => pick(apodFlavor),
-  marsFlavor: () => pick(marsFlavor),
-  errorLine: () => pick(errorLines),
-  logAckLine: () => pick(logAckLines),
+  bootLine() { return pick(bootLines); },
+  pingLine() { return pick(pingLines); },
+  issFlavor() { return pick(issFlavor); },
+  launchFlavor() { return pick(launchFlavor); },
+  apodFlavor() { return pick(apodFlavor); },
+  marsFlavor() { return pick(marsFlavor); },
+  errorLine() { return pick(errorLines); },
+  logAckLine() { return pick(logAckLines); },
 };
