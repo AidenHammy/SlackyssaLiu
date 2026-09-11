@@ -11,17 +11,29 @@ async function getApod() {
 }
 
 async function getRandomMarsPhoto() {
-  // Curiosity has thousands of sols, just grab a random one
-  const sol = Math.floor(Math.random() * 3000) + 1;
   const url = "https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos";
   
-  const { data } = await axios.get(url, {
-    params: { sol, api_key: NASA_KEY },
-  });
+  // Try up to 5 times to find a sol with actual photos
+  for (let i = 0; i < 5; i++) {
+    const sol = Math.floor(Math.random() * 3000) + 1;
+    const { data } = await axios.get(url, {
+      params: { sol, api_key: NASA_KEY },
+    });
 
+    const { photos } = data;
+    if (photos && photos.length > 0) {
+      return photos[Math.floor(Math.random() * photos.length)];
+    }
+  }
+  
+  // If it still fails after 5 tries, just grab a known good sol (Sol 1000)
+  const { data } = await axios.get(url, {
+    params: { sol: 1000, api_key: NASA_KEY },
+  });
+  
   const { photos } = data;
-  if (!photos || !photos.length) return null;
-  return photos[Math.floor(Math.random() * photos.length)];
+  if (photos && photos.length > 0) return photos[0];
+  return null;
 }
 
 module.exports = { getApod, getRandomMarsPhoto };

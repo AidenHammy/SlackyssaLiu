@@ -70,7 +70,7 @@ function registerCommands(app) {
     await safeRespond(respond, async () => {
       const { title, date, url } = await nasa.getApod();
       await respond({ 
-        text: `*${title}* (${date})\n${url}\n${p.apodFlavor()}`,
+        text: `*${title}* (${date})\n<${url}>\n${p.apodFlavor()}`,
         unfurl_links: true,
         unfurl_media: true
       });
