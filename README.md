@@ -8,11 +8,17 @@ It runs entirely via Slack Socket Mode, meaning there's no public HTTP endpoint 
 
 ## Screenshots
 
-[APOD Image Embed](![alt text](APOD.png))
+### APOD Image Embed 
 
-[ISS Tracking](![alt text](ISS.png))
+![APOD Image Embed](APOD.png?raw=true)
 
-[EPIC Earth Photo](![alt text](EPIC.png))
+### ISS Tracking 
+
+![ISS Tracking](ISS.png?raw=true)
+
+### EPIC Earth Photo 
+
+![EPIC Earth Photo](EPIC.png?raw=true)
 
 ## Commands
 
