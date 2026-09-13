@@ -1,2 +1,5 @@
 node_modules
 .env
+ground-control.sqlite
+ground-control.sqlite-shm
+ground-control.sqlite-wal

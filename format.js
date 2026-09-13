@@ -15,8 +15,14 @@ function countdown(targetIso) {
 async function safeRespond(respond, fn, errorLine) {
   try {
     await fn();
-  } catch {
-    console.error("Respond failed");
+  } catch (e) {
+    // Log the actual API error if it's an Axios error
+    if (e.response) {
+      console.error("API Error Status:", e.response.status);
+      console.error("API Error Data:", e.response.data);
+    } else {
+      console.error("Unknown Error:", e.message);
+    }
     await respond({ text: errorLine });
   }
 }

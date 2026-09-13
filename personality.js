@@ -57,14 +57,13 @@ const apodFlavor = [
   "the universe casually dropping a banger and then going back to being incomprehensibly vast.",
 ];
 
-const marsFlavor = [
-  "a robot on Mars took this. meanwhile half of us can't get a decent photo in daylight.",
-  "Mars: extremely inhospitable weirdly photogenic.",
-  "no atmosphere worth mentioning no wifi worth having still somehow better lighting than most conference rooms.",
-  "the rover remains employed on another planet. career trajectory frankly humiliating for the rest of us.",
-  "red planet dust everywhere zero customer service. five stars for scenery.",
-  "Mars continues to look like Earth after someone dragged the saturation slider into a felony.",
-  "a machine millions of miles away just sent us this. technology is so weird when you stop to think about it.",
+const earthFlavor = [
+  "a satellite took this of Earth. your planet is looking surprisingly photogenic today.",
+  "Earth: the only place where we have to pay for water despite literally floating in space.",
+  "a view of the pale blue dot. please keep your arms and legs inside the atmosphere at all times.",
+  "this is what we look like from a million miles away. very humbling, slightly blurry.",
+  "Earth doing its thing. rotating at 1,000 mph while pretending to be a stock photo.",
+  "a completely different angle on the universe. literally just looking in the mirror.",
 ];
 
 const errorLines = [
@@ -96,7 +95,7 @@ module.exports = {
   issFlavor() { return pick(issFlavor); },
   launchFlavor() { return pick(launchFlavor); },
   apodFlavor() { return pick(apodFlavor); },
-  marsFlavor() { return pick(marsFlavor); },
+  earthFlavor() { return pick(earthFlavor); },
   errorLine() { return pick(errorLines); },
   logAckLine() { return pick(logAckLines); },
 };

@@ -2,6 +2,7 @@ const nasa = require("./services/nasa"),
       openNotify = require("./services/openNotify"),
       launchLibrary = require("./services/launchLibrary"),
       db = require("./db"),
+      axios = require("axios"),
       p = require("./personality"),
       { countdown, safeRespond } = require("./format");
 
@@ -65,39 +66,102 @@ function registerCommands(app) {
     }, p.errorLine());
   });
 
-  app.command("/skl-apod", async ({ ack, respond }) => {
+    app.command("/skl-apod", async ({ ack, respond, client, body }) => {
     await ack();
     await safeRespond(respond, async () => {
-      const { title, date, url } = await nasa.getApod();
-      await respond({ 
-        text: `*${title}* (${date})\n<${url}>\n${p.apodFlavor()}`,
-        // Forcing blocks is the only way to 100% guarantee unfurling on slash commands
+      const apod = await nasa.getApod();
+      const { title, date, url, media_type } = apod;
+
+      if (media_type === "image") {
+        await respond({
+          blocks: [
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: `*${title}* (${date})\n${p.apodFlavor()}` }
+            },
+            {
+              type: "image",
+              image_url: url,
+              alt_text: title
+            }
+          ]
+        });
+        return;
+      }
+
+      if (media_type === "video") {
+        // Handle YouTube links natively (no download required)
+        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+          const videoId = extractYouTubeId(url);
+          if (videoId) {
+            await respond({
+              blocks: [
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: `*${title}* (${date})\n${p.apodFlavor()}` }
+                },
+                {
+                  type: "video",
+                  title: { type: "plain_text", text: title.slice(0, 200) },
+                  video_url: `https://www.youtube.com/embed/${videoId}`,
+                  title_url: url,
+                  thumbnail_url: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+                  alt_text: title
+                }
+              ]
+            });
+            return;
+          }
+        }
+
+        // Download and upload raw .mp4 files directly to Slack
+        // responseType: 'stream' prevents memory crashes on large files
+        const videoRes = await axios.get(url, { responseType: "stream", timeout: 30000 });
+        
+        await client.filesUploadV2({
+          channel_id: body.channel_id,
+          file: videoRes.data,
+          filename: `apod-${date}.mp4`,
+          title: title,
+          initial_comment: `*${title}* (${date})\n${p.apodFlavor()}`
+        });
+        return;
+      }
+
+      // Fallback if media_type is something weird
+      await respond({ text: `*${title}* (${date})\n${url}` });
+    }, p.errorLine());
+  });
+
+  app.command("/skl-earth", async ({ ack, respond }) => {
+    await ack();
+    await safeRespond(respond, async () => {
+      const photo = await nasa.getEpicPhoto();
+      if (!photo) {
+        await respond({ text: "No recent Earth imagery available. Try again later." });
+        return;
+      }
+
+      // Embedding the Earth image using Block Kit
+      await respond({
+        text: `🌍 ${photo.caption}`,
         blocks: [
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `*${title}* (${date})\n<${url}>\n${p.apodFlavor()}`
+              text: `🌍 ${photo.caption}\nA completely different angle on the universe.`
             }
+          },
+          {
+            type: "image",
+            image_url: photo.url,
+            alt_text: "Earth from space"
           }
-        ],
-        unfurl_links: true,
-        unfurl_media: true
+        ]
       });
     }, p.errorLine());
-  });
-
-  app.command("/skl-mars", async ({ ack, respond }) => {
-    await ack();
-    await safeRespond(respond, async () => {
-      const photo = await nasa.getRandomMarsPhoto();
-      if (!photo) {
-        await respond({ text: "No photo on file for that sol. Try again." });
-        return;
-      }
-      await respond({ text: `🔴 Curiosity, sol ${photo.sol} (${photo.camera.full_name})\n${photo.img_src}\n${p.marsFlavor()}` });
-    }, p.errorLine());
-  });
+  })
 
   app.command("/skl-log", async ({ command, ack, respond }) => {
     await ack();
@@ -150,6 +214,17 @@ function registerCommands(app) {
     db.removeAnnounceChannel(command.channel_id);
     await respond({ text: "Removed this channel from the daily schedule. No more pings here." });
   });
+}
+
+function extractYouTubeId(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes("youtube.com")) return parsed.searchParams.get("v");
+    if (parsed.hostname === "youtu.be") return parsed.pathname.slice(1).split("/")[0];
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 module.exports = registerCommands;
