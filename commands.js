@@ -13,7 +13,7 @@ _Live telemetry_
 - /skl-crew -> who's currently off-planet
 - /skl-launch -> the next scheduled rocket launch
 - /skl-apod -> NASA's picture of the day
-- /skl-mars -> a random photo from Curiosity
+- /skl-earth -> a recent photo of Earth from space
 
 _Mission records_
 - /skl-log [text] -> add an entry to this channel's mission log
@@ -66,7 +66,7 @@ function registerCommands(app) {
     }, p.errorLine());
   });
 
-    app.command("/skl-apod", async ({ ack, respond, client, body }) => {
+  app.command("/skl-apod", async ({ ack, respond, client, body }) => {
     await ack();
     await safeRespond(respond, async () => {
       const apod = await nasa.getApod();
@@ -74,6 +74,7 @@ function registerCommands(app) {
 
       if (media_type === "image") {
         await respond({
+          text: `*${title}* (${date})`,
           blocks: [
             {
               type: "section",
@@ -90,11 +91,11 @@ function registerCommands(app) {
       }
 
       if (media_type === "video") {
-        // Handle YouTube links natively (no download required)
         if (url.includes("youtube.com") || url.includes("youtu.be")) {
           const videoId = extractYouTubeId(url);
           if (videoId) {
             await respond({
+              text: `*${title}* (${date})`,
               blocks: [
                 {
                   type: "section",
@@ -114,8 +115,6 @@ function registerCommands(app) {
           }
         }
 
-        // Download and upload raw .mp4 files directly to Slack
-        // responseType: 'stream' prevents memory crashes on large files
         const videoRes = await axios.get(url, { responseType: "stream", timeout: 30000 });
         
         await client.filesUploadV2({
@@ -128,7 +127,6 @@ function registerCommands(app) {
         return;
       }
 
-      // Fallback if media_type is something weird
       await respond({ text: `*${title}* (${date})\n${url}` });
     }, p.errorLine());
   });
@@ -142,7 +140,6 @@ function registerCommands(app) {
         return;
       }
 
-      // Embedding the Earth image using Block Kit
       await respond({
         text: `🌍 ${photo.caption}`,
         blocks: [
@@ -161,7 +158,7 @@ function registerCommands(app) {
         ]
       });
     }, p.errorLine());
-  })
+  });
 
   app.command("/skl-log", async ({ command, ack, respond }) => {
     await ack();
@@ -204,7 +201,6 @@ function registerCommands(app) {
 
   app.command("/skl-setup", async ({ command, ack, respond }) => {
     await ack();
-    // command.channel_id is the channel where the user typed the command
     db.setAnnounceChannel(command.channel_id, command.team_id);
     await respond({ text: "Scheduled posts (APOD/Launches) are now bound to this channel. 📡" });
   });

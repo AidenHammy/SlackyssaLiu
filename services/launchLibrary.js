@@ -2,10 +2,7 @@ const axios = require('axios');
 
 const BASE = 'https://ll.thespacedevs.com/2.2.0';
 
-const headers = {
-  // LL2 requires a user-agent or authorization string, even for basic limits
-  Authorization: "Discord",
-};
+const headers = { Authorization: "Discord" };
 
 async function getNextLaunch() {
   const { data } = await axios.get(`${BASE}/launch/upcoming/`, {

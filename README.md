@@ -1,80 +1,60 @@
 # SlackyssaLiu
 
-*My first Slack bot started as a basic cat-facts script. It kind of spiraled from there. Now it tracks the ISS, posts space photos and keeps a log of channel activity.*
+> **[Add to Slack (Demo)](https://slack.com/oauth/v2/authorize?client_id=2210535565.11305028366354&scope=files:write,chat:write,commands&user_scope=)**
 
----
+SlackyssaLiu started as a basic cat-facts script and kind of spiraled from there. Now it's a space-obsessed Slack bot that tracks the ISS, posts daily satellite imagery and keeps a log of channel activity.
 
-## Overview
+It runs entirely via Slack Socket Mode, meaning there's no public HTTP endpoint or webhook tunneling required. It also uses SQLite to remember channel-specific mission logs, custom user callsigns and which channels want daily scheduled posts.
 
-SlackyssaLiu used to be a standard "cat facts and jokes" bot. After a redesign, it gained a personality and a weird fixation on space. It now pulls live data to tell you where the ISS is, when the next rocket launch is happening and posts NASA's Astronomy Picture of the Day every morning.
+## Screenshots
 
-It also uses SQLite to remember things now—like channel-specific mission logs and custom user callsigns.
+[APOD Image Embed](![alt text](APOD.png))
 
----
+[ISS Tracking](![alt text](ISS.png))
 
-## Features
-
-* Live Space Data:
-
-  * Current ISS location
-  * Who is currently in space
-  * Next rocket launch + countdown
-  * NASA's Picture of the Day (APOD)
-  * Random Mars rover photos
-* Channel Memory (SQLite):
-
-  * Channel-specific mission logs
-  * Custom user callsigns
-* Automated Tasks (node-cron):
-
-  * Drops the APOD in the channel every morning
-  * Pings the channel an hour before a scheduled launch
-* Other:
-  * Real-time slash commands via Slack Socket Mode (no public URL needed)
-  * Fails gracefully if an API rate limits or goes down
-
----
+[EPIC Earth Photo](![alt text](EPIC.png))
 
 ## Commands
 
-| Command               | Description                          |
-| --------------------- | ------------------------------------ |
-| `/skl-ping`           | Health check                         |
-| `/skl-help`           | List all commands                    |
-| `/skl-iss`            | Current ISS location                 |
-| `/skl-crew`           | 	Current astronauts in space        |
-| `/skl-launch`         | Next rocket launch + countdown       |
-| `/skl-apod`           | NASA Astronomy Picture of the Day    |
-| `/skl-mars`           | Random Mars rover photo              |
-| `/skl-log [text]`     | Add an entry to the mission log      |
-| `/skl-logs`           | View recent mission log entries      |
-| `/skl-callsign [name]`| Set your user callsign               |
+Once added to your workspace, use `/invite @SlackyssaLiu` in the channel where you want to use it.
 
----
+|      **Command**       |                   **Description**                     |
+| ---------------------- | ----------------------------------------------------- |
+| `/skl-ping`            | Health check                                          |
+| `/skl-help`            | List all commands                                     |
+| `/skl-iss`             | Current ISS location                                  |
+| `/skl-crew`            | Current astronauts in space                           |
+| `/skl-launch`          | Next rocket launch + countdown                        |
+| `/skl-apod`            | NASA Astronomy Picture of the Day (natively embedded) |
+| `/skl-earth`           | Recent photo of Earth from the EPIC satellite         |
+| `/skl-log [text]`      | Add an entry to the mission log                       |
+| `/skl-logs`            | View recent mission log entries                       |
+| `/skl-callsign [name]` | Set your user callsign                                |
+| `/skl-setup`           | Bind daily scheduled posts to this channel            |
+| `/skl-unset`           | Stop scheduled posts in this channel                  |
+
+## Required Permissions
+
+This bot requires the following Bot Token Scopes to function. It does not ask for admin or read permissions:
+
+- `commands` — to listen for slash commands
+- `chat:write` — to respond and post scheduled messages
+- `files:write` — to upload NASA APOD video files directly to Slack
 
 ## Tech Stack
 
-* Node.js
-* Slack Bolt Framework
-* Axios (API requests)
-* better-sqlite3 (local database)
-* node-cron (scheduled tasks)
+- **Node.js**
+- **Slack Bolt Framework** (Socket Mode)
+- **Axios** (API requests)
+- **better-sqlite3** (local database for logs, callsigns and channel routing)
+- **node-cron** (scheduled tasks)
 
----
+## Notes / Gotchas
 
-## Deployment
-
-Runs via Socket Mode so you don't need to set up public endpoints or tunnels. Just run it on a small VPS and it will stay connected in the background.
-
----
-
-## Notes
-
-* Open Notify API: This is a community-run API for ISS/crew data and is occasionally down. If `/skl-iss` or `/skl-crew` fail, check open-notify.org before debugging your code.
-* Database: The SQLite file generates automatically on first run.
-* Timezones: Cron jobs run on server time. You may need to adjust the schedule in `scheduler.js` depending on your server's timezone.
-
----
+- **ISS & Crew APIs:** The primary Open Notify API is community-run and occasionally goes offline. If it fails or returns non-JSON, the bot automatically falls back to `wheretheiss.at` and `howmanypeopleareinspacerightnow.com` with a 5-second timeout.
+- **Launch Library 2:** The `/skl-launch` command requires a specific header (`Authorization: "Discord"`) to hit the free tier API. If it silently fails, double-check that header in `services/launchLibrary.js`.
+- **Video Limits:** When NASA's APOD is a raw `.mp4` file, the bot downloads and streams it directly to Slack using `filesUploadV2` to prevent memory limits on smaller hosting plans. YouTube videos are rendered using Slack's native video block.
+- **Timezones:** Cron jobs run on server time. You may need to adjust the schedule in `scheduler.js` depending on your server's timezone.
 
 ## Acknowledgements
 
